@@ -72,9 +72,9 @@ for file_path in log_files:
                 butch_values = ""
 
 cursor.execute('''
-                    INSERT INTO web_requests (date, ip, login, url, method, path, navigator)
-                    VALUES
-                    {butch_values}'''.format(butch_values = butch_values)[:-1])
+    INSERT INTO web_requests (date, ip, login, url, method, path, navigator)
+    VALUES
+    {butch_values}'''.format(butch_values = butch_values)[:-1])
 db.commit()
 butch_values = ""
 
