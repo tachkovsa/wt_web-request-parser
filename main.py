@@ -4,9 +4,10 @@ import sys
 from glob import glob
 import psycopg2
 
-db = psycopg2.connect(dbname='wt_sandbox', user='postgres', 
-                        password='postgrespw', host='localhost', port=55000)
+db = psycopg2.connect(dbname='wt_sandbox', user='postgres',
+                      password='postgrespw', host='localhost', port=55000)
 cursor = db.cursor()
+
 
 def create_table():
     cursor.execute('''
@@ -23,20 +24,22 @@ def create_table():
     );
     ''')
 
+
 def past_to_db(butch):
     cursor.execute('''
         INSERT INTO web_requests (date, ip, login, url, method, path, mode, object_id, navigator)
         VALUES
-        {butch}'''.format(butch = butch)[:-1])
+        {butch}'''.format(butch=butch)[:-1])
     db.commit()
+
 
 log_files = glob("./logs/*.log")
 
-butch_size = 1000;
+butch_size = 1000
 
 for file_path in log_files:
     file_name = os.path.basename(file_path)
-    file_date = re.match(r"web\_request\-(\d\d\d\d\-\d\d\-\d\d)\.log", file_name).group(1)
+    file_date = re.match(r"web_request-(\d\d\d\d-\d\d-\d\d)\.log", file_name).group(1)
 
     with open(file_path) as fp:
         file_lines = fp.readlines()
@@ -52,14 +55,14 @@ for file_path in log_files:
             percent = (line_number / total_lines)
 
             sys.stdout.write('\r')
-            sys.stdout.write("[%-20s] %d%%" % ('='*int(20*percent), percent*100))
+            sys.stdout.write("[%-20s] %d%%" % ('=' * int(20 * percent), percent * 100))
             sys.stdout.flush()
-            
-            separated_line = line.split(" ");
-            
-            if (len(separated_line) < 14):
+
+            separated_line = line.split(" ")
+
+            if len(separated_line) < 14:
                 continue
-    
+
             date, time, ip, login, url, _, method, path, _, _, _, _, _, navigator = separated_line
 
             path_substrings = ["custom_web_template", "view_doc", "_wt"]
@@ -77,7 +80,7 @@ for file_path in log_files:
             navigator = navigator.replace("\"", "")[:-1]
 
             regex = r"mode=([a-z_\d]*)|\/_wt\/([a-z_\d]*)|(object_id|course_id|assessment_id)=(\d*)"
-            
+
             match = re.findall(regex, path)
             if (match is None or not match):
                 continue
@@ -94,20 +97,20 @@ for file_path in log_files:
             object_id = first_match[3]
 
             try:
-                if (not object_id):
+                if not object_id:
                     object_id = int(first_match[1])
             except:
-                if (not mode):
+                if not mode:
                     mode = first_match[1]
 
             try:
                 object_id = int(object_id)
             except:
                 object_id = "NULL"
-            
+
             # print(mode)
             # print(object_id)
-            
+
             butch_values += '''(
                     TO_TIMESTAMP('{date} {time}', 'YYYY-MM-DD HH24:MI:SS'),
                     '{ip}',
@@ -118,10 +121,11 @@ for file_path in log_files:
                     '{mode}',
                     {object_id},
                     '{navigator}'
-                ),'''.format(date = date, time = time, ip = ip, login = login, url = url, method = method, path = path, mode = mode, object_id = object_id, navigator = navigator)
+                ),'''.format(date=date, time=time, ip=ip, login=login, url=url, method=method, path=path, mode=mode,
+                             object_id=object_id, navigator=navigator)
             butch_count += 1
 
-            if (butch_count % butch_size == 0):
+            if butch_count % butch_size == 0:
                 past_to_db(butch_values)
                 butch_count = 0
                 butch_values = ""
