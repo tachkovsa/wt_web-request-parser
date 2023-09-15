@@ -4,8 +4,8 @@ import sys
 from glob import glob
 import psycopg2
 
-db = psycopg2.connect(dbname='wt_sandbox', user='postgres',
-                      password='postgrespw', host='localhost', port=55000)
+db = psycopg2.connect(dbname='wt_requests', user='postgres_admin',
+                      password='postgres_admin', host='localhost', port=5432)
 cursor = db.cursor()
 
 
@@ -32,6 +32,8 @@ def past_to_db(butch):
         {butch}'''.format(butch=butch)[:-1])
     db.commit()
 
+
+create_table()
 
 log_files = glob("./logs/*.log")
 
